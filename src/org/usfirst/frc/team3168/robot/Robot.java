@@ -3,6 +3,9 @@ package org.usfirst.frc.team3168.robot;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.SD540;
+import edu.wpi.first.wpilibj.XboxController;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -16,7 +19,15 @@ public class Robot extends IterativeRobot {
 	final String customAuto = "My Auto";
 	String autoSelected;
 	SendableChooser<String> chooser = new SendableChooser<>();
-
+	Joystick leftJoystick,rightJoystick;
+	SD540 frontLeft, frontRight, backLeft, backRight;
+	double yRight, yLeft;
+	
+	boolean UseJoySticks =true;
+	boolean UseXbox = false;
+	boolean DebugMode = false;
+	double DeadZone = 0.5;
+	
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -26,6 +37,34 @@ public class Robot extends IterativeRobot {
 		chooser.addDefault("Default Auto", defaultAuto);
 		chooser.addObject("My Auto", customAuto);
 		SmartDashboard.putData("Auto choices", chooser);
+		
+		if (UseJoySticks==true)
+		{
+			System.out.println("Using Joysticks");
+			/**  Joy Stick code here  */
+			leftJoystick = new Joystick(0);
+			rightJoystick = new Joystick(1);
+		}else if (UseXbox==true) {
+			System.out.println("Set up XBOX Controllers. @NATHAN @ABHISHEK");
+			}
+			
+		}
+		
+		
+		
+	
+	
+	public static void robotMotors() {
+		
+		
+	}
+	
+	public void robotJoysticks() {
+
+	}
+	
+	public static void robotXBOX() {
+		
 	}
 
 	/**
@@ -68,13 +107,39 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
+		System.out.println("Teleop Periodic");
 	}
+	
 
 	/**
 	 * This function is called periodically during test mode
 	 */
 	@Override
 	public void testPeriodic() {
+		if (UseJoySticks==true){
+			/** Used when config allows the usage of the Joysticks*/
+			yLeft = leftJoystick.getY();
+		    yRight = -rightJoystick.getY();
+		        if(Math.abs(yLeft) < DeadZone)
+		        {
+		        	frontLeft.set(0);backLeft.set(0);
+		        }
+		        else
+		        {
+		        	frontLeft.set(yLeft);backLeft.set(yLeft);
+		        }
+		        if(Math.abs(yRight) < DeadZone)
+		        {
+		        	frontRight.set(0);backRight.set(0);
+		        }
+		        else
+		        {
+		        	frontRight.set(yRight);backRight.set(yRight);
+		        }
+			
+		}else if (UseXbox==true){
+			
+		}
 	}
 }
 
