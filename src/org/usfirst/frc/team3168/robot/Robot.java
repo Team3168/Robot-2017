@@ -1,10 +1,13 @@
 package org.usfirst.frc.team3168.robot;
 
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.SD540;
+//import edu.wpi.first.wpilibj.SD540;
+import edu.wpi.first.wpilibj.Talon;
+//import edu.wpi.first.wpilibj.TalonSRX;
 import edu.wpi.first.wpilibj.XboxController;
 
 /**
@@ -20,13 +23,15 @@ public class Robot extends IterativeRobot {
 	String autoSelected;
 	SendableChooser<String> chooser = new SendableChooser<>();
 	Joystick leftJoystick,rightJoystick;
-	SD540 frontLeft, frontRight, backLeft, backRight;
+	XboxController Xbox;
+	Talon frontLeft, frontRight, backLeft, backRight,WinchMotor,FlapperMotor;
 	double yRight, yLeft;
-	
-	boolean UseJoySticks =true;
-	boolean UseXbox = false;
+	 
+	boolean UseJoySticks =true; // Are we using Joysticks?/
+	boolean UseXbox = false; // Are we using the XBOX Controller?/
 	boolean DebugMode = false;
-	double DeadZone = 0.5;
+	double DeadZone = 0.5; // Deadzone for the Joysticks and XBOX Controller/
+	boolean Winch,FlapperGo,FlapperReturn,WinchReturn;
 	
 	/**
 	 * This function is run when the robot is first started up and should be
@@ -36,15 +41,16 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		chooser.addDefault("Default Auto", defaultAuto);
 		chooser.addObject("My Auto", customAuto);
-		SmartDashboard.putData("Auto choices", chooser);
+		edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putData("Auto choices", chooser);
 		
 		if (UseJoySticks==true)
 		{
 			System.out.println("Using Joysticks");
-			/**  Joy Stick code here  */
+			/**  Joy Sticks initalized here  */
 			leftJoystick = new Joystick(0);
 			rightJoystick = new Joystick(1);
 		}else if (UseXbox==true) {
+			Xbox= new XboxController(0);
 			System.out.println("Set up XBOX Controllers. @NATHAN @ABHISHEK");
 			}
 			
@@ -80,6 +86,10 @@ public class Robot extends IterativeRobot {
 			break;
 		case defaultAuto:
 		default:
+			frontLeft.set(.5);
+			frontRight.set(.5);
+			backLeft.set(.5);
+			backRight.set(.5);
 			// Put default auto code here
 			break;
 		}
@@ -100,10 +110,29 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void testPeriodic() {
 		if (UseJoySticks==true){
-			/** Used when config allows the usage of the Joysticks*/
+			// Used when config allows the usage of the Joysticks
 			yLeft = leftJoystick.getY();
-		    yRight = -rightJoystick.getY();
-		        if(Math.abs(yLeft) < DeadZone)
+		    yRight = -rightJoystick.getY();	
+		   FlapperGo = rightJoystick.getRawButton(1);
+		   FlapperReturn = rightJoystick.getRawButton(2);
+		   Winch = leftJoystick.getRawButton(1);
+		   WinchReturn = leftJoystick.getRawButton(2);
+		   Robot.SmartDashboard.PutString("Controller Type :","Joystick");
+		}else if (UseXbox==true && UseJoySticks==false) //Use when XBOX is allowed
+		{
+			
+			yLeft = Xbox.getY(GenericHID.Hand.kLeft); //Fetches Left Joystick
+			yRight =Xbox.getY(GenericHID.Hand.kRight); //Fetches Right Joystick
+			FlapperReturn = Xbox.getBumper(GenericHID.Hand.kLeft); //Left Bumber Sets Go
+			FlapperGo= Xbox.getTrigger(GenericHID.Hand.kLeft);
+			WinchReturn = Xbox.getBumper(GenericHID.Hand.kRight); //Right Bumber reverses Winch
+			Winch = Xbox.getTrigger(GenericHID.Hand.kRight);
+			Robot.SmartDashboard.PutString("Controller Type :","XBOX");
+		}
+		
+		if (UseXbox==true || UseJoySticks == true) //Tank Drive Code
+		{
+			  if(Math.abs(yLeft) < DeadZone)
 		        {
 		        	frontLeft.set(0);backLeft.set(0);
 		        }
@@ -111,7 +140,7 @@ public class Robot extends IterativeRobot {
 		        {
 		        	frontLeft.set(yLeft);backLeft.set(yLeft);
 		        }
-		        if(Math.abs(yRight) < DeadZone)
+		      if(Math.abs(yRight) < DeadZone)
 		        {
 		        	frontRight.set(0);backRight.set(0);
 		        }
@@ -119,10 +148,23 @@ public class Robot extends IterativeRobot {
 		        {
 		        	frontRight.set(yRight);backRight.set(yRight);
 		        }
-			
-		}else if (UseXbox==true){
-			
+		      
+		      //Other Controls
+		      if(FlapperGo==true){FlapperMotor.set(.5);}
+		      if(FlapperReturn==true){FlapperMotor.set(-0.5);}
+		      if(Winch==true){WinchMotor.set(.5);}
+		      if(WinchReturn==true){WinchMotor.set(-.5);}
 		}
+	}
+	
+	public static class SmartDashboard
+	{
+		public static void PutNumber(String Message,int Number){
+			edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber(Message,Number);}
+		public static void PutString(String Caption,String Message){
+			edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString(Caption,Message);
+		}
+		
 	}
 }
 
