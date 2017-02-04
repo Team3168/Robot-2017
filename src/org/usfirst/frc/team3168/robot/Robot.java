@@ -1,5 +1,7 @@
 package org.usfirst.frc.team3168.robot;
 
+import java.io.Console;
+
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -18,13 +20,13 @@ import edu.wpi.first.wpilibj.XboxController;
  * directory.
  */
 public class Robot extends IterativeRobot {
-	final String defaultAuto = "Default";
-	final String customAuto = "My Auto";
-	String autoSelected;
+	final String DefaultAuto = "Default";
+	final String CustomAuto = "My Auto";
+	String AutoSelected;
 	SendableChooser<String> chooser = new SendableChooser<>();
-	Joystick leftJoystick,rightJoystick;
+	Joystick LeftJoystick,RightJoystick;
 	XboxController Xbox;
-	Talon frontLeft, frontRight, backLeft, backRight,WinchMotor,FlapperMotor;
+	Talon FrontLeft, FrontRight, BackLeft, BackRight,WinchMotor,FlapperMotor;
 	double yRight, yLeft;
 	 
 	boolean UseJoySticks =true; // Are we using Joysticks?/
@@ -39,16 +41,20 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
-		chooser.addDefault("Default Auto", defaultAuto);
-		chooser.addObject("My Auto", customAuto);
+		chooser.addDefault("Default Auto", DefaultAuto);
+		chooser.addObject("My Auto", CustomAuto);
 		edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putData("Auto choices", chooser);
-		
+		FrontLeft = new Talon(0);
+		FrontRight = new Talon(1);
+		BackLeft = new Talon(3);
+		BackRight = new Talon(4);
+		double yRight, yLeft;
 		if (UseJoySticks==true)
 		{
 			System.out.println("Using Joysticks");
 			/**  Joy Sticks initalized here  */
-			leftJoystick = new Joystick(0);
-			rightJoystick = new Joystick(1);
+			LeftJoystick = new Joystick(0);
+			RightJoystick = new Joystick(1);
 		}else if (UseXbox==true) {
 			Xbox= new XboxController(0);
 			System.out.println("Set up XBOX Controllers. @NATHAN @ABHISHEK");
@@ -69,10 +75,10 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-		autoSelected = chooser.getSelected();
+		AutoSelected = chooser.getSelected();
 		// autoSelected = SmartDashboard.getString("Auto Selector",
 		// defaultAuto);
-		System.out.println("Auto selected: " + autoSelected);
+		System.out.println("Auto selected: " + AutoSelected);
 	}
 
 	/**
@@ -80,16 +86,16 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		switch (autoSelected) {
-		case customAuto:
+		switch (AutoSelected) {
+		case CustomAuto:
 			// Put custom auto code here
 			break;
-		case defaultAuto:
+		case DefaultAuto:
 		default:
-			frontLeft.set(.5);
-			frontRight.set(.5);
-			backLeft.set(.5);
-			backRight.set(.5);
+			FrontLeft.set(.5);
+			FrontRight.set(.5);
+			BackLeft.set(.5);
+			BackRight.set(.5);
 			// Put default auto code here
 			break;
 		}
@@ -101,22 +107,14 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void teleopPeriodic() {
 		System.out.println("Teleop Periodic");
-	}
-	
-
-	/**
-	 * This function is called periodically during test mode
-	 */
-	@Override
-	public void testPeriodic() {
 		if (UseJoySticks==true){
 			// Used when config allows the usage of the Joysticks
-			yLeft = leftJoystick.getY();
-		    yRight = -rightJoystick.getY();	
-		   FlapperGo = rightJoystick.getRawButton(1);
-		   FlapperReturn = rightJoystick.getRawButton(2);
-		   Winch = leftJoystick.getRawButton(1);
-		   WinchReturn = leftJoystick.getRawButton(2);
+			yLeft = LeftJoystick.getY();
+		    yRight = -RightJoystick.getY();	
+		   FlapperGo = RightJoystick.getRawButton(1);
+		   FlapperReturn = RightJoystick.getRawButton(2);
+		   Winch = LeftJoystick.getRawButton(1);
+		   WinchReturn = LeftJoystick.getRawButton(2);
 		   Robot.SmartDashboard.PutString("Controller Type :","Joystick");
 		}else if (UseXbox==true && UseJoySticks==false) //Use when XBOX is allowed
 		{
@@ -134,19 +132,73 @@ public class Robot extends IterativeRobot {
 		{
 			  if(Math.abs(yLeft) < DeadZone)
 		        {
-		        	frontLeft.set(0);backLeft.set(0);
+		        	FrontLeft.set(0);BackLeft.set(0);
 		        }
 		        else
 		        {
-		        	frontLeft.set(yLeft);backLeft.set(yLeft);
+		        	FrontLeft.set(yLeft);BackLeft.set(yLeft);
 		        }
 		      if(Math.abs(yRight) < DeadZone)
 		        {
-		        	frontRight.set(0);backRight.set(0);
+		        	FrontRight.set(0);BackRight.set(0);
 		        }
 		        else
 		        {
-		        	frontRight.set(yRight);backRight.set(yRight);
+		        	FrontRight.set(yRight);BackRight.set(yRight);
+		        }
+		      
+		      //Other Controls
+		      if(FlapperGo==true){FlapperMotor.set(.5);}
+		      if(FlapperReturn==true){FlapperMotor.set(-0.5);}
+		      if(Winch==true){WinchMotor.set(.5);}
+		      if(WinchReturn==true){WinchMotor.set(-.5);}
+		}
+	}
+	
+
+	/**
+	 * This function is called periodically during test mode
+	 */
+	@Override
+	public void testPeriodic() {
+		if (UseJoySticks==true){
+			// Used when config allows the usage of the Joysticks
+			yLeft = LeftJoystick.getY();
+		    yRight = -RightJoystick.getY();	
+		   FlapperGo = RightJoystick.getRawButton(1);
+		   FlapperReturn = RightJoystick.getRawButton(2);
+		   Winch = LeftJoystick.getRawButton(1);
+		   WinchReturn = LeftJoystick.getRawButton(2);
+		   Robot.SmartDashboard.PutString("Controller Type :","Joystick");
+		}else if (UseXbox==true && UseJoySticks==false) //Use when XBOX is allowed
+		{
+			
+			yLeft = Xbox.getY(GenericHID.Hand.kLeft); //Fetches Left Joystick
+			yRight =Xbox.getY(GenericHID.Hand.kRight); //Fetches Right Joystick
+			FlapperReturn = Xbox.getBumper(GenericHID.Hand.kLeft); //Left Bumber Sets Go
+			FlapperGo= Xbox.getTrigger(GenericHID.Hand.kLeft);
+			WinchReturn = Xbox.getBumper(GenericHID.Hand.kRight); //Right Bumber reverses Winch
+			Winch = Xbox.getTrigger(GenericHID.Hand.kRight);
+			Robot.SmartDashboard.PutString("Controller Type :","XBOX");
+		}
+		
+		if (UseXbox==true || UseJoySticks == true) //Tank Drive Code
+		{
+			  if(Math.abs(yLeft) < DeadZone)
+		        {
+		        	FrontLeft.set(0);BackLeft.set(0);
+		        }
+		        else
+		        {
+		        	FrontLeft.set(yLeft);BackLeft.set(yLeft);
+		        }
+		      if(Math.abs(yRight) < DeadZone)
+		        {
+		        	FrontRight.set(0);BackRight.set(0);
+		        }
+		        else
+		        {
+		        	FrontRight.set(yRight);BackRight.set(yRight);
 		        }
 		      
 		      //Other Controls
