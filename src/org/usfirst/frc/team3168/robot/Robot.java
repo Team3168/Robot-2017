@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Joystick;
 //import edu.wpi.first.wpilibj.SD540;
 import edu.wpi.first.wpilibj.Talon;
@@ -40,7 +41,8 @@ public class Robot extends IterativeRobot {
 	 * used for any initialization code.
 	 */
 	@Override
-	public void robotInit() {
+	public void robotInit() //On Startup 
+	{
 		chooser.addDefault("Default Auto", DefaultAuto);
 		chooser.addObject("My Auto", CustomAuto);
 		edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putData("Auto choices", chooser);
@@ -48,7 +50,10 @@ public class Robot extends IterativeRobot {
 		FrontRight = new Talon(1);
 		BackLeft = new Talon(3);
 		BackRight = new Talon(4);
-		double yRight, yLeft;
+		double yRight,yLeft;
+		
+		CameraServer.getInstance().startAutomaticCapture(); //Starts up video streaming
+		
 		if (UseJoySticks==true)
 		{
 			System.out.println("Using Joysticks");
@@ -211,9 +216,13 @@ public class Robot extends IterativeRobot {
 	
 	public static class SmartDashboard
 	{
-		public static void PutNumber(String Message,int Number){
-			edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber(Message,Number);}
-		public static void PutString(String Caption,String Message){
+		public static void PutNumber(String Message,int Number)
+		{
+			edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putNumber(Message,Number);
+			
+		}
+		public static void PutString(String Caption,String Message)
+		{
 			edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putString(Caption,Message);
 		}
 		
