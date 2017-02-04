@@ -1,7 +1,6 @@
 package org.usfirst.frc.team3168.robot;
 
 import java.io.Console;
-
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -10,6 +9,7 @@ import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Joystick;
 //import edu.wpi.first.wpilibj.SD540;
 import edu.wpi.first.wpilibj.Talon;
+import edu.wpi.first.wpilibj.Victor;
 //import edu.wpi.first.wpilibj.TalonSRX;
 import edu.wpi.first.wpilibj.XboxController;
 
@@ -27,7 +27,7 @@ public class Robot extends IterativeRobot {
 	SendableChooser<String> chooser = new SendableChooser<>();
 	Joystick LeftJoystick,RightJoystick;
 	XboxController Xbox;
-	Talon FrontLeft, FrontRight, BackLeft, BackRight,WinchMotor,FlapperMotor;
+	Victor FrontLeft, FrontRight, BackLeft, BackRight,WinchMotor,FlapperMotor;
 	double yRight, yLeft;
 	 
 	boolean UseJoySticks =true; // Are we using Joysticks?/
@@ -46,11 +46,10 @@ public class Robot extends IterativeRobot {
 		chooser.addDefault("Default Auto", DefaultAuto);
 		chooser.addObject("My Auto", CustomAuto);
 		edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putData("Auto choices", chooser);
-		FrontLeft = new Talon(0);
-		FrontRight = new Talon(1);
-		BackLeft = new Talon(3);
-		BackRight = new Talon(4);
-		double yRight,yLeft;
+		FrontLeft = new Victor(0);
+		FrontRight = new Victor(1);
+		BackLeft = new Victor(3);
+		BackRight = new Victor(4);
 		
 		CameraServer.getInstance().startAutomaticCapture(); //Starts up video streaming
 		
@@ -80,9 +79,8 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-		AutoSelected = chooser.getSelected();
-		// autoSelected = SmartDashboard.getString("Auto Selector",
-		// defaultAuto);
+		//AutoSelected = chooser.getSelected();
+		AutoSelected = edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.getString("Auto Selector",DefaultAuto);
 		System.out.println("Auto selected: " + AutoSelected);
 	}
 
@@ -93,9 +91,17 @@ public class Robot extends IterativeRobot {
 	public void autonomousPeriodic() {
 		switch (AutoSelected) {
 		case CustomAuto:
+			FrontLeft.set(.5);
+			FrontRight.set(.5);
+			BackLeft.set(.5);
+			BackRight.set(.5);
 			// Put custom auto code here
 			break;
 		case DefaultAuto:
+			FrontLeft.set(.5);
+			FrontRight.set(.5);
+			BackLeft.set(.5);
+			BackRight.set(.5);
 		default:
 			FrontLeft.set(.5);
 			FrontRight.set(.5);
@@ -133,30 +139,10 @@ public class Robot extends IterativeRobot {
 			Robot.SmartDashboard.PutString("Controller Type :","XBOX");
 		}
 		
-		if (UseXbox==true || UseJoySticks == true) //Tank Drive Code
+		if (UseXbox==true || UseJoySticks == true) 
 		{
-			  if(Math.abs(yLeft) < DeadZone)
-		        {
-		        	FrontLeft.set(0);BackLeft.set(0);
-		        }
-		        else
-		        {
-		        	FrontLeft.set(yLeft);BackLeft.set(yLeft);
-		        }
-		      if(Math.abs(yRight) < DeadZone)
-		        {
-		        	FrontRight.set(0);BackRight.set(0);
-		        }
-		        else
-		        {
-		        	FrontRight.set(yRight);BackRight.set(yRight);
-		        }
-		      
-		      //Other Controls
-		      if(FlapperGo==true){FlapperMotor.set(.5);}
-		      if(FlapperReturn==true){FlapperMotor.set(-0.5);}
-		      if(Winch==true){WinchMotor.set(.5);}
-		      if(WinchReturn==true){WinchMotor.set(-.5);}
+			TankDrive(yLeft,yRight);  //Tank Drive Code
+			OtherControls(FlapperGo, FlapperReturn, Winch, WinchReturn);  //Other Controls
 		}
 	}
 	
@@ -187,31 +173,40 @@ public class Robot extends IterativeRobot {
 			Robot.SmartDashboard.PutString("Controller Type :","XBOX");
 		}
 		
-		if (UseXbox==true || UseJoySticks == true) //Tank Drive Code
+		if (UseXbox==true || UseJoySticks == true) 
 		{
-			  if(Math.abs(yLeft) < DeadZone)
-		        {
-		        	FrontLeft.set(0);BackLeft.set(0);
-		        }
-		        else
-		        {
-		        	FrontLeft.set(yLeft);BackLeft.set(yLeft);
-		        }
-		      if(Math.abs(yRight) < DeadZone)
-		        {
-		        	FrontRight.set(0);BackRight.set(0);
-		        }
-		        else
-		        {
-		        	FrontRight.set(yRight);BackRight.set(yRight);
-		        }
-		      
-		      //Other Controls
-		      if(FlapperGo==true){FlapperMotor.set(.5);}
-		      if(FlapperReturn==true){FlapperMotor.set(-0.5);}
-		      if(Winch==true){WinchMotor.set(.5);}
-		      if(WinchReturn==true){WinchMotor.set(-.5);}
+		      TankDrive(yLeft,yRight); //Tank Drive Code
+		      OtherControls(FlapperGo,FlapperReturn,Winch,WinchReturn); //Other Controls
 		}
+	}
+	
+	public void TankDrive(double yLeft,double yRight) //Tank Drive Controls
+	{
+		if(Math.abs(yLeft) < DeadZone)
+        {
+        	FrontLeft.set(0);BackLeft.set(0);
+        }
+        else
+        {
+        	FrontLeft.set(yLeft);BackLeft.set(yLeft);
+        }
+      if(Math.abs(yRight) < DeadZone)
+        {
+        	FrontRight.set(0);BackRight.set(0);
+        }
+        else
+        {
+        	FrontRight.set(yRight);BackRight.set(yRight);
+        }
+		
+	}
+	
+	public void OtherControls(boolean FlapperGo,boolean FlapperReturn,boolean Winch,boolean WinchReturn) //Non Tank Drive Controls
+	{
+	      if(FlapperGo==true){FlapperMotor.set(.5);}
+	      if(FlapperReturn==true){FlapperMotor.set(-0.5);}
+	      if(Winch==true){WinchMotor.set(.5);}
+	      if(WinchReturn==true){WinchMotor.set(-.5);}
 	}
 	
 	public static class SmartDashboard
