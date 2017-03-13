@@ -123,9 +123,9 @@ public class Robot extends IterativeRobot {
 	void Interface()
 	{
 		if (UseJoySticks==true){
-			// Used when config allows the usage of the Joysticks
-			yLeft = LeftJoystick.getY();
-		    yRight = RightJoystick.getY();	
+		   // Used when config allows the usage of the Joysticks
+		   yLeft = LeftJoystick.getY();
+		   yRight = RightJoystick.getY();	
 		   FlapperGo = RightJoystick.getRawButton(1);
 		   FlapperReturn = RightJoystick.getRawButton(2);
 		   Winch = LeftJoystick.getRawButton(1);
@@ -168,27 +168,27 @@ public class Robot extends IterativeRobot {
 	
 	public void TankDrive(double yLeft,double yRight) //Tank Drive Controls
 	{
-		DriverStation.reportWarning("TD Left: " + yLeft +" Right " + yRight, DebugMode);
+		//DriverStation.reportWarning("TD Left: " + yLeft +" Right " + yRight, DebugMode);
 		if(Math.abs(yRight) < DeadZone)
         {
         	Right.set(0);
-        	DriverStation.reportError("R NO GO", false);
+        	//DriverStation.reportError("R NO GO", false);
         }
         else
         {
         	Right.set(yRight/2);
-        	DriverStation.reportError("R GO", false);
+        	//DriverStation.reportError("R GO", false);
         }
 		
       if(Math.abs(yLeft) < DeadZone)
         {
         	Left.set(0);
-        	DriverStation.reportError("L NO GO", false);
+        	//DriverStation.reportError("L NO GO", false);
         }
         else
         {
         	Left.set(-yLeft/2);
-        	DriverStation.reportError("L GO", false);
+        	//DriverStation.reportError("L GO", false);
         }
 		
 	}
