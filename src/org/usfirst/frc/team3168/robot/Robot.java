@@ -5,11 +5,12 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Joystick;
 //import edu.wpi.first.wpilibj.SD540;
-import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Victor;
+import edu.wpi.first.wpilibj.Spark;
 //import edu.wpi.first.wpilibj.TalonSRX;
 import edu.wpi.first.wpilibj.XboxController;
 
@@ -27,13 +28,14 @@ public class Robot extends IterativeRobot {
 	SendableChooser<String> chooser = new SendableChooser<>();
 	Joystick LeftJoystick,RightJoystick;
 	XboxController Xbox;
-	Victor FrontLeft, FrontRight, BackLeft, BackRight,WinchMotor,FlapperMotor;
+	Victor Right, Left, WinchMotor;
+	Spark FlapperMotor;
 	double yRight, yLeft;
 	 
 	boolean UseJoySticks =true; // Are we using Joysticks?/
-	boolean UseXbox = false; // Are we using the XBOX Controller?/
-	boolean DebugMode = false;
-	double DeadZone = 0.5; // Deadzone for the Joysticks and XBOX Controller/
+	boolean UseXbox = !UseJoySticks; // Are we using the XBOX Controller?/
+	boolean DebugMode = false,Go1,Go2;
+	double DeadZone = 0.1; // Deadzone for the Joysticks and XBOX Controller/
 	boolean Winch,FlapperGo,FlapperReturn,WinchReturn;
 	
 	/**
@@ -46,22 +48,22 @@ public class Robot extends IterativeRobot {
 		chooser.addDefault("Default Auto", DefaultAuto);
 		chooser.addObject("My Auto", CustomAuto);
 		edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.putData("Auto choices", chooser);
-		FrontLeft = new Victor(0);
-		FrontRight = new Victor(1);
-		BackLeft = new Victor(3);
-		BackRight = new Victor(4);
 		
+		Right = new Victor(0);
+		Left = new Victor(1);
+		FlapperMotor = new Spark(2);
+		WinchMotor = new Victor(3);
+	
 		CameraServer.getInstance().startAutomaticCapture(); //Starts up video streaming
-		
 		if (UseJoySticks==true)
 		{
-			System.out.println("Using Joysticks");
 			/**  Joy Sticks initalized here  */
 			LeftJoystick = new Joystick(0);
 			RightJoystick = new Joystick(1);
+			DriverStation.reportWarning("Using Joysticks.",DebugMode);
 		}else if (UseXbox==true) {
 			Xbox= new XboxController(0);
-			System.out.println("Set up XBOX Controllers. @NATHAN @ABHISHEK");
+			DriverStation.reportWarning("Set up XBOX Controllers. @NATHAN @ABHISHEK",DebugMode);
 			}
 			
 		}
@@ -81,7 +83,7 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 		//AutoSelected = chooser.getSelected();
 		AutoSelected = edu.wpi.first.wpilibj.smartdashboard.SmartDashboard.getString("Auto Selector",DefaultAuto);
-		System.out.println("Auto selected: " + AutoSelected);
+		DriverStation.reportWarning("Auto selected: " + AutoSelected,DebugMode);
 	}
 
 	/**
@@ -90,24 +92,12 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousPeriodic() {
 		switch (AutoSelected) {
-		case CustomAuto:
-			FrontLeft.set(.5);
-			FrontRight.set(.5);
-			BackLeft.set(.5);
-			BackRight.set(.5);
-			// Put custom auto code here
-			break;
 		case DefaultAuto:
-			FrontLeft.set(.5);
-			FrontRight.set(.5);
-			BackLeft.set(.5);
-			BackRight.set(.5);
+		case CustomAuto:
 		default:
-			FrontLeft.set(.5);
-			FrontRight.set(.5);
-			BackLeft.set(.5);
-			BackRight.set(.5);
-			// Put default auto code here
+			Right.set(.5f);
+			Left.set(.5f);
+			// Put custom auto code here
 			break;
 		}
 	}
@@ -117,33 +107,8 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
-		System.out.println("Teleop Periodic");
-		if (UseJoySticks==true){
-			// Used when config allows the usage of the Joysticks
-			yLeft = LeftJoystick.getY();
-		    yRight = -RightJoystick.getY();	
-		   FlapperGo = RightJoystick.getRawButton(1);
-		   FlapperReturn = RightJoystick.getRawButton(2);
-		   Winch = LeftJoystick.getRawButton(1);
-		   WinchReturn = LeftJoystick.getRawButton(2);
-		   Robot.SmartDashboard.PutString("Controller Type :","Joystick");
-		}else if (UseXbox==true && UseJoySticks==false) //Use when XBOX is allowed
-		{
-			
-			yLeft = Xbox.getY(GenericHID.Hand.kLeft); //Fetches Left Joystick
-			yRight =Xbox.getY(GenericHID.Hand.kRight); //Fetches Right Joystick
-			FlapperReturn = Xbox.getBumper(GenericHID.Hand.kLeft); //Left Bumber Sets Go
-			FlapperGo= Xbox.getTrigger(GenericHID.Hand.kLeft);
-			WinchReturn = Xbox.getBumper(GenericHID.Hand.kRight); //Right Bumber reverses Winch
-			Winch = Xbox.getTrigger(GenericHID.Hand.kRight);
-			Robot.SmartDashboard.PutString("Controller Type :","XBOX");
-		}
-		
-		if (UseXbox==true || UseJoySticks == true) 
-		{
-			TankDrive(yLeft,yRight);  //Tank Drive Code
-			OtherControls(FlapperGo, FlapperReturn, Winch, WinchReturn);  //Other Controls
-		}
+		DriverStation.reportWarning("Teleop Periodic",DebugMode);
+		Interface();
 	}
 	
 
@@ -152,15 +117,22 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void testPeriodic() {
+		Interface();
+	}
+	
+	void Interface()
+	{
 		if (UseJoySticks==true){
 			// Used when config allows the usage of the Joysticks
 			yLeft = LeftJoystick.getY();
-		    yRight = -RightJoystick.getY();	
+		    yRight = RightJoystick.getY();	
 		   FlapperGo = RightJoystick.getRawButton(1);
 		   FlapperReturn = RightJoystick.getRawButton(2);
 		   Winch = LeftJoystick.getRawButton(1);
-		   WinchReturn = LeftJoystick.getRawButton(2);
+		  // WinchReturn = LeftJoystick.getRawButton(2);
+		   Go1 = LeftJoystick.getRawButton(3);
 		   Robot.SmartDashboard.PutString("Controller Type :","Joystick");
+		   
 		}else if (UseXbox==true && UseJoySticks==false) //Use when XBOX is allowed
 		{
 			
@@ -172,31 +144,51 @@ public class Robot extends IterativeRobot {
 			Winch = Xbox.getTrigger(GenericHID.Hand.kRight);
 			Robot.SmartDashboard.PutString("Controller Type :","XBOX");
 		}
+		if (Go1)
+		{
+			Left.setRaw(100);
+		}
+		if (Left.isAlive() == false || Right.isAlive() == false) 
+		{
+			DriverStation.reportError("Left : " + Left.isAlive() +"; Right : " + Right.isAlive(),DebugMode);
+		}
 		
 		if (UseXbox==true || UseJoySticks == true) 
 		{
-		      TankDrive(yLeft,yRight); //Tank Drive Code
-		      OtherControls(FlapperGo,FlapperReturn,Winch,WinchReturn); //Other Controls
+			try{
+			TankDrive(yLeft,yRight);  //Tank Drive Code
+			OtherControls(FlapperGo, FlapperReturn, Winch, WinchReturn);  //Other Controls
+			}
+			catch (Exception ex)
+			{
+				DriverStation.reportWarning("Error: " + ex, DebugMode);
+			}
 		}
 	}
 	
 	public void TankDrive(double yLeft,double yRight) //Tank Drive Controls
 	{
-		if(Math.abs(yLeft) < DeadZone)
+		DriverStation.reportWarning("TD Left: " + yLeft +" Right " + yRight, DebugMode);
+		if(Math.abs(yRight) < DeadZone)
         {
-        	FrontLeft.set(0);BackLeft.set(0);
+        	Right.set(0);
+        	DriverStation.reportError("R NO GO", false);
         }
         else
         {
-        	FrontLeft.set(yLeft);BackLeft.set(yLeft);
+        	Right.set(yRight/2);
+        	DriverStation.reportError("R GO", false);
         }
-      if(Math.abs(yRight) < DeadZone)
+		
+      if(Math.abs(yLeft) < DeadZone)
         {
-        	FrontRight.set(0);BackRight.set(0);
+        	Left.set(0);
+        	DriverStation.reportError("L NO GO", false);
         }
         else
         {
-        	FrontRight.set(yRight);BackRight.set(yRight);
+        	Left.set(-yLeft/2);
+        	DriverStation.reportError("L GO", false);
         }
 		
 	}
@@ -205,10 +197,26 @@ public class Robot extends IterativeRobot {
 	{
 	      if(FlapperGo==true){FlapperMotor.set(.5);}
 	      if(FlapperReturn==true){FlapperMotor.set(-0.5);}
-	      if(Winch==true){WinchMotor.set(.5);}
-	      if(WinchReturn==true){WinchMotor.set(-.5);}
+	      if(Winch==true)
+	      	{
+	      		WinchMotor.set(-.33);
+	      	}
+	      if(Winch==false)
+	      	{
+	    	  	WinchMotor.set(0);
+	      	}
+	      //if(WinchReturn==true){WinchMotor.set(-.5);}
+	      if(FlapperGo==false && FlapperReturn==false)
+	      {
+	    	  FlapperMotor.set(0); //Should turn off the Flapper Motor
+	      }
 	}
 	
+	private void when(boolean b) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	public static class SmartDashboard
 	{
 		public static void PutNumber(String Message,int Number)
